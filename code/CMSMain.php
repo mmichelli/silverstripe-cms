@@ -3,29 +3,29 @@
  * The main "content" area of the CMS.
  * This class creates a 2-frame layout - left-tree and right-form - to sit beneath the main
  * admin menu.
- * 
+ *
  * @package cms
  * @subpackage content
  * @todo Create some base classes to contain the generic functionality that will be replicated.
  */
 class CMSMain extends LeftAndMain implements CurrentPageIdentifier, PermissionProvider {
-	
+
 	static $url_segment = '';
-	
+
 	static $url_rule = '/$Action/$ID/$OtherID';
-	
+
 	// Maintain a lower priority than other administration sections
 	// so that Director does not think they are actions of CMSMain
 	static $url_priority = 40;
-	
+
 	static $menu_title = 'Pages';
-	
+
 	static $menu_priority = 10;
-	
+
 	static $tree_class = "SiteTree";
-	
+
 	static $subitem_class = "Member";
-	
+
 	static $allowed_actions = array(
 		'addpage',
 		'buildbrokenlinks',
@@ -53,32 +53,32 @@ class CMSMain extends LeftAndMain implements CurrentPageIdentifier, PermissionPr
 		'getfilteredsubtree',
 		'batchactions',
 	);
-	
+
 	/**
 	 * SiteTree Columns that can be filtered using the the Site Tree Search button
 	 */
 	static $site_tree_filter_options = array(
 		'Title' => array('CMSMain.TITLE', 'Title'),
 		'MenuTitle' => array('CMSMain.MENUTITLE', 'Navigation Label'),
-		'ClassName' => array('CMSMain.PAGETYPE', 'Page Type'), 
+		'ClassName' => array('CMSMain.PAGETYPE', 'Page Type'),
 		'Status' => array('CMSMain.STATUS', 'Status'),
 		'MetaDescription' => array('CMSMain.METADESC', 'Description'),
 		'MetaKeywords' => array('CMSMain.METAKEYWORDS', 'Keywords')
 	);
-	
+
 	static function T_SiteTreeFilterOptions(){
 		return array(
 			'Title' => _t('CMSMain.TITLEOPT', 'Title', 0, 'The dropdown title in CMSMain left SiteTreeFilterOptions'),
 			'MenuTitle' => _t('CMSMain.MENUTITLEOPT', 'Navigation Label', 0, 'The dropdown title in CMSMain left SiteTreeFilterOptions'),
-			'Status' => _t('CMSMain.STATUSOPT', 'Status',  0, "The dropdown title in CMSMain left SiteTreeFilterOptions"), 
-			'MetaDescription' => _t('CMSMain.METADESCOPT', 'Description', 0, "The dropdown title in CMSMain left SiteTreeFilterOptions"), 
+			'Status' => _t('CMSMain.STATUSOPT', 'Status',  0, "The dropdown title in CMSMain left SiteTreeFilterOptions"),
+			'MetaDescription' => _t('CMSMain.METADESCOPT', 'Description', 0, "The dropdown title in CMSMain left SiteTreeFilterOptions"),
 			'MetaKeywords' => _t('CMSMain.METAKEYWORDSOPT', 'Keywords', 0, "The dropdown title in CMSMain left SiteTreeFilterOptions")
 		);
 	}
-	
+
 	public function init() {
 		parent::init();
-		
+
 		// Locale" attribute is either explicitly added by LeftAndMain Javascript logic,
 		// or implied on a translated record (see {@link Translatable->updateCMSFields()}).
 		// $Lang serves as a "context" which can be inspected by Translatable - hence it
@@ -88,20 +88,20 @@ class CMSMain extends LeftAndMain implements CurrentPageIdentifier, PermissionPr
 		} elseif($this->getRequest()->requestVar("locale")) {
 			$this->Locale = $this->getRequest()->requestVar("locale");
 		} else {
-			$this->Locale = Translatable::default_locale();
+			$this->Locale = Translatable::choose_site_local();
 		}
-		Translatable::set_current_locale($this->Locale);
-		
+
+
 		// collect languages for TinyMCE spellchecker plugin.
 		// see http://wiki.moxiecode.com/index.php/TinyMCE:Plugins/spellchecker
 		$langName = i18n::get_locale_name($this->Locale);
 		HtmlEditorConfig::get('cms')->setOption('spellchecker_languages', "+{$langName}={$this->Locale}");
-				
+
 		Requirements::javascript(CMS_DIR . '/javascript/CMSMain.js');
 		Requirements::javascript(CMS_DIR . '/javascript/CMSMain_left.js');
 		Requirements::javascript(CMS_DIR . '/javascript/CMSMain_right.js');
 	}
-	
+
 	/**
 	 * If this is set to true, the "switchView" context in the
 	 * template is shown, with links to the staging and publish site.
@@ -111,7 +111,7 @@ class CMSMain extends LeftAndMain implements CurrentPageIdentifier, PermissionPr
 	function ShowSwitchView() {
 		return true;
 	}
-	
+
 	/**
 	 * Overloads the LeftAndMain::ShowView. Allows to pass a page as a parameter, so we are able
 	 * to switch view also for archived versions.
@@ -120,7 +120,7 @@ class CMSMain extends LeftAndMain implements CurrentPageIdentifier, PermissionPr
 		if(!$page) {
 			$page = $this->currentPage();
 		}
-		
+
 		if($page) {
 			$nav = SilverStripeNavigator::get_for_record($page);
 			Requirements::customScript("window.name = windowName('cms');");
@@ -136,7 +136,7 @@ class CMSMain extends LeftAndMain implements CurrentPageIdentifier, PermissionPr
 
 	/**
 	 * Override {@link LeftAndMain} Link to allow blank URL segment for CMSMain.
-	 * 
+	 *
 	 * @return string
 	 */
 	public function Link($action = null) {
@@ -161,7 +161,7 @@ class CMSMain extends LeftAndMain implements CurrentPageIdentifier, PermissionPr
 
 		return $this->getSiteTreeFor("SiteTree");
 	}
-	
+
 	/**
 	 * Use a CMSSiteTreeFilter to only get certain nodes
 	 *
@@ -172,12 +172,12 @@ class CMSMain extends LeftAndMain implements CurrentPageIdentifier, PermissionPr
 		if (!isset($_REQUEST['filter'])) die('No filter passed');
 		if (!ClassInfo::exists($_REQUEST['filter'])) die ('That filter class does not exist');
 		if (!is_subclass_of($_REQUEST['filter'], 'CMSSiteTreeFilter')) die ('That is not a valid filter');
-		
+
 		// Do eeet!
 		$filter = new $_REQUEST['filter']();
 		return $filter->getTree();
 	}
-	
+
 	/**
 	 * Returns a list of batch actions
 	 */
@@ -199,14 +199,14 @@ class CMSMain extends LeftAndMain implements CurrentPageIdentifier, PermissionPr
 		}
 		return $doSet;
 	}
-	
+
 	/**
 	 * Returns the SiteTree columns that can be filtered using the the Site Tree Search button as a DataObjectSet
 	 */
 	public function SiteTreeFilterOptions() {
 		$filter_options = new DataObjectSet();
 		foreach(self::T_SiteTreeFilterOptions() as $key => $value) {
-   			$record = array(
+			$record = array(
 				'Column' => $key,
 				'Title' => $value,
 			);
@@ -216,12 +216,12 @@ class CMSMain extends LeftAndMain implements CurrentPageIdentifier, PermissionPr
 	}
 		public function SiteTreeFilterDateField() {
 			$dateField = new DateField('SiteTreeFilterDate');
-			
+
 			// TODO Enabling this means we load jQuery UI by default in the CMS,
 			// which is a pretty big performance hit in 2.4 (where the library isn't used for other parts
 			// of the interface).
 			// $dateField->setConfig('showcalendar', true);
-			
+
 			return $dateField->Field();
 		}
 		public function SiteTreeFilterPageTypeField() {
@@ -230,7 +230,7 @@ class CMSMain extends LeftAndMain implements CurrentPageIdentifier, PermissionPr
 			asort($source);
 			$optionsetField = new DropdownField('ClassName', 'ClassName', $source, 'Any');
 			return $optionsetField->Field();
-		}	
+		}
 
 	public function generateDataTreeHints() {
 		$classes = ClassInfo::subclassesFor( $this->stat('tree_class') );
@@ -242,7 +242,7 @@ class CMSMain extends LeftAndMain implements CurrentPageIdentifier, PermissionPr
 			if($obj instanceof HiddenClass) continue;
 
 			$allowedChildren = $obj->allowedChildren();
-			if($allowedChildren != "none")  $def[$class]['allowedChildren'] = $allowedChildren;
+			if($allowedChildren != "none")	$def[$class]['allowedChildren'] = $allowedChildren;
 			$def[$class]['defaultChild'] = $obj->defaultChild();
 			$def[$class]['defaultParent'] = isset(SiteTree::get_by_link($obj->defaultParent())->ID) ? SiteTree::get_by_link($obj->defaultParent())->ID : null;
 
@@ -346,7 +346,7 @@ JS;
 			if($instance->stat('need_permission') && !$this->can(singleton($class)->stat('need_permission'))) continue;
 
 			$addAction = $instance->i18n_singular_name();
-			
+
 			// if we're in translation mode, the link between the translated pagetype
 			// title and the actual classname might not be obvious, so we add it in parantheses
 			// Example: class "RedirectorPage" has the title "Weiterleitung" in German,
@@ -360,17 +360,17 @@ JS;
 				'AddAction' => $addAction,
 			)));
 		}
-		
+
 		$result->sort('AddAction');
-		
+
 		return $result;
 	}
 
 	/**
 	 * Save the current sites {@link SiteConfig} into the database
 	 *
-	 * @param array $data 
-	 * @param Form $form 
+	 * @param array $data
+	 * @param Form $form
 	 * @return FormResponse
 	 */
 	function save_siteconfig($data, $form) {
@@ -388,7 +388,7 @@ JS;
 	/**
 	 * Get a database record to be managed by the CMS
 	 */
- 	public function getRecord($id) {
+	public function getRecord($id) {
 		$treeClass = $this->stat('tree_class');
 
 		if($id && is_numeric($id)) {
@@ -408,7 +408,7 @@ JS;
 				$record = DataObject::get_one( $treeClass, "\"$treeClass\".\"ID\" = $id");
 				if($record) Versioned::set_reading_mode('');
 			}
-			
+
 			// Then, try getting a deleted record
 			if(!$record) {
 				$record = Versioned::get_latest_version($treeClass, $id);
@@ -417,9 +417,9 @@ JS;
 			// Don't open a page from a different locale
 			/** The record's Locale is saved in database in 2.4, and not related with Session,
 			 *  we should not check their locale matches the Translatable::get_current_locale,
-			 * 	here as long as we all the HTTPRequest is init with right locale.
+			 *	here as long as we all the HTTPRequest is init with right locale.
 			 *	This bit breaks the all FileIFrameField functions if the field is used in CMS
-			 *  and its relevent ajax calles, like loading the tree dropdown for TreeSelectorField. 
+			 *  and its relevent ajax calles, like loading the tree dropdown for TreeSelectorField.
 			 */
 			/* if($record && Object::has_extension('SiteTree', 'Translatable') && $record->Locale && $record->Locale != Translatable::get_current_locale()) {
 				$record = null;
@@ -450,23 +450,23 @@ JS;
 			$fields->push(new HiddenField('Sort','', $record->Sort ));
 
 			$idField->setValue($id);
-			
+
 			if($record->ID && is_numeric( $record->ID ) ) {
 				$liveRecord = Versioned::get_one_by_stage('SiteTree', 'Live', "\"SiteTree\".\"ID\" = $record->ID");
 				if($liveRecord) $liveURLField->setValue($liveRecord->AbsoluteLink());
 			}
-			
+
 			if(!$record->IsDeletedFromStage) {
 				$stageURLField->setValue($record->AbsoluteLink());
 			}
-			
+
 			// getAllCMSActions can be used to completely redefine the action list
 			if($record->hasMethod('getAllCMSActions')) {
 				$actions = $record->getAllCMSActions();
 			} else {
 				$actions = $record->getCMSActions();
 			}
-			
+
 			// Add a default or custom validator.
 			// @todo Currently the default Validator.js implementation
 			//  adds javascript to the document body, meaning it won't
@@ -480,12 +480,12 @@ JS;
 			} else {
 				$validator = new RequiredFields();
 			}
-			
+
 			// The clientside (mainly LeftAndMain*.js) rely on ajax responses
 			// which can be evaluated as javascript, hence we need
 			// to override any global changes to the validation handler.
 			$validator->setJavascriptValidationHandler('prototype');
-			
+
 			$form = new Form($this, "EditForm", $fields, $actions, $validator);
 			$form->loadDataFrom($record);
 			$form->disableDefaultAction();
@@ -494,7 +494,7 @@ JS;
 				$readonlyFields = $form->Fields()->makeReadonly();
 				$form->setFields($readonlyFields);
 			}
-			
+
 			$this->extend('updateEditForm', $form);
 
 			return $form;
@@ -533,7 +533,7 @@ JS;
 	public function addpage($data, $form) {
 		// Protect against CSRF on destructive action
 		if(!SecurityToken::inst()->checkRequest($this->request)) return $this->httpError(400);
-		
+
 		$className = isset($_REQUEST['PageType']) ? $_REQUEST['PageType'] : "Page";
 		$parent = isset($_REQUEST['ParentID']) ? $_REQUEST['ParentID'] : 0;
 		$suffix = isset($_REQUEST['Suffix']) ? "-" . $_REQUEST['Suffix'] : null;
@@ -546,7 +546,7 @@ JS;
 		if(is_numeric($parent)) $parentObj = DataObject::get_by_id("SiteTree", $parent);
 		else $parentObj = null;
 		if(!$parentObj || !$parentObj->ID) $parent = 0;
-		
+
 		if($parentObj){
 			if(!$parentObj->canAddChildren()) return Security::permissionFailure($this);
 			if(!singleton($className)->canCreate()) return Security::permissionFailure($this);
@@ -567,19 +567,19 @@ JS;
 	 */
 	public function getNewItem($id, $setID = true) {
 		list($dummy, $className, $parentID, $suffix) = array_pad(explode('-',$id),4,null);
-		
+
 		$newItem = new $className();
 
 	    if( !$suffix ) {
 			$sessionTag = "NewItems." . $parentID . "." . $className;
-    		if(Session::get($sessionTag)) {
-		    	$suffix = '-' . Session::get($sessionTag);
-		    	Session::set($sessionTag, Session::get($sessionTag) + 1);
+		if(Session::get($sessionTag)) {
+			$suffix = '-' . Session::get($sessionTag);
+			Session::set($sessionTag, Session::get($sessionTag) + 1);
 		    }
 		    else
-		    	Session::set($sessionTag, 1);
+			Session::set($sessionTag, 1);
 
-		    	$id = $id . $suffix;
+			$id = $id . $suffix;
 	    }
 
 		$newItem->Title = _t('CMSMain.NEW',"New ",PR_MEDIUM,'"New " followed by a className').$className;
@@ -597,13 +597,13 @@ JS;
 
 		# Some modules like subsites add extra fields that need to be set when the new item is created
 		$this->extend('augmentNewSiteTreeItem', $newItem);
-		
+
 		return $newItem;
 	}
 
 	/**
 	 * Delete the page from live. This means a page in draft mode might still exist.
-	 * 
+	 *
 	 * @see delete()
 	 */
 	public function deletefromlive($urlParams, $form) {
@@ -611,10 +611,10 @@ JS;
 		Versioned::reading_stage('Live');
 		$record = DataObject::get_by_id("SiteTree", $id);
 		if($record && !($record->canDelete() && $record->canDeleteFromLive())) return Security::permissionFailure($this);
-		
+
 		$descRemoved = '';
 		$descendantsRemoved = 0;
-		
+
 		// before deleting the records, get the descendants of this tree
 		if($record) {
 			$descendantIDs = $record->getDescendantIDList();
@@ -651,16 +651,16 @@ JS;
 	 */
 	public function performPublish($record) {
 		if($record && !$record->canPublish()) return Security::permissionFailure($this);
-		
+
 		$record->doPublish();
 	}
 
 	/**
- 	 * Reverts a page by publishing it to live.
- 	 * Use {@link restorepage()} if you want to restore a page
- 	 * which was deleted from draft without publishing.
- 	 * 
- 	 * @uses SiteTree->doRevertToLive()
+	 * Reverts a page by publishing it to live.
+	 * Use {@link restorepage()} if you want to restore a page
+	 * which was deleted from draft without publishing.
+	 *
+	 * @uses SiteTree->doRevertToLive()
 	 */
 	public function revert($urlParams, $form) {
 		$id = (int)$_REQUEST['ID'];
@@ -679,22 +679,22 @@ JS;
 
 		return FormResponse::respond();
 	}
-	
+
 	/**
 	 * Delete the current page from draft stage.
 	 * @see deletefromlive()
 	 */
 	public function delete($data, $form) {
 		$record = DataObject::get_one(
-			"SiteTree", 
+			"SiteTree",
 			sprintf("\"SiteTree\".\"ID\" = %d", Convert::raw2sql($data['ID']))
 		);
 		if($record && !$record->canDelete()) return Security::permissionFailure();
-		
+
 		// save ID and delete record
 		$recordID = $record->ID;
 		$record->delete();
-		
+
 		if(Director::is_ajax()) {
 			// need a valid ID value even if the record doesn't have one in the database
 			// (its still present in the live tables)
@@ -708,12 +708,12 @@ JS;
 				FormResponse::add($this->deleteTreeNodeJS($record));
 				FormResponse::status_message(sprintf(_t('CMSMain.REMOVEDPAGEFROMDRAFT',"Removed '%s' from the draft site"),$record->Title), 'good');
 				return FormResponse::respond();
-			}			
+			}
 		} else {
 			Director::redirectBack();
 		}
 	}
-	
+
 	function SideReports() {
 		return SS_Report::get_reports('SideReport');
 	}
@@ -725,10 +725,10 @@ JS;
 		// $options[""] = _t('CMSMain.CHOOSEREPORT',"(Choose a report)");
 		foreach($this->SideReports() as $report) {
 			if($report->canView()) {
-			 	$options[$report->group()][$report->sort()][$report->ID()] = $report->title();
+				$options[$report->group()][$report->sort()][$report->ID()] = $report->title();
 			}
 		}
-		
+
 		$finalOptions = array();
 		foreach($options as $group => $weights) {
 			ksort($weights);
@@ -738,10 +738,10 @@ JS;
 				}
 			}
 		}
-		
+
 		return new GroupedDropdownField("ReportSelector", _t('CMSMain.REPORT', 'Report'),$finalOptions);
 	}
-	
+
 	/**
 	 * Generate the parameter HTML for SideReports that have params
 	 *
@@ -763,10 +763,10 @@ JS;
 		$pageHtml = '';
 		foreach($forms as $class => $html) {
 			$pageHtml .= "<div id=\"SideReportForm_$class\" style=\"display:none\">$html</div>\n\n";
-		} 
+		}
 		return new LiteralField("ReportFormParameters", '<div id="SideReportForms" style="display:none">'.$pageHtml.'</div>');
 	}
-	
+
 	/**
 	 * Get the content for a side report
 	 */
@@ -784,8 +784,8 @@ JS;
 			}
 		}
 	}
-	
-	
+
+
 	/**
 	 * Get the versions of the current page
 	 */
@@ -820,14 +820,14 @@ JS;
 		$SQL_id = Convert::raw2sql($_REQUEST['ID']);
 
 		$page = DataObject::get_by_id("SiteTree", $SQL_id);
-		
+
 		if($page && !$page->canDeleteFromLive()) return Security::permissionFailure($this);
-		
+
 		$page->doUnpublish();
-		
+
 		return $this->tellBrowserAboutPublicationChange($page, sprintf(_t('CMSMain.REMOVEDPAGE',"Removed '%s' from the published site"),$page->Title));
 	}
-	
+
 	/**
 	 * Return a few pieces of information about a change to a page
 	 *  - Send the new status message
@@ -845,7 +845,7 @@ JS;
 
 		FormResponse::add($this->getActionUpdateJS($page));
 		FormResponse::update_status($page->Status);
-		
+
 		if($JS_stageURL || $JS_liveURL) {
 			FormResponse::add("\$('sitetree').setNodeTitle($page->ID, '$JS_title');");
 		} else {
@@ -853,7 +853,7 @@ JS;
 			FormResponse::add("if(node && node.parentTreeNode) node.parentTreeNode.removeTreeNode(node);");
 			FormResponse::add("$('Form_EditForm').reloadIfSetTo($page->ID);");
 		}
-		
+
 		if($statusMessage) FormResponse::status_message($statusMessage, 'good');
 		FormResponse::add("$('Form_EditForm').elements.StageURLSegment.value = '$JS_stageURL';");
 		FormResponse::add("$('Form_EditForm').elements.LiveURLSegment.value = '$JS_liveURL';");
@@ -865,7 +865,7 @@ JS;
 	function performRollback($id, $version) {
 		$record = DataObject::get_by_id($this->stat('tree_class'), $id);
 		if($record && !$record->canEdit()) return Security::permissionFailure($this);
-		
+
 		$record->doRollbackTo($version);
 		return $record;
 	}
@@ -874,7 +874,7 @@ JS;
 		$id = $this->urlParams['ID'];
 		$version = str_replace('&ajax=1','',$this->urlParams['OtherID']);
 		$record = Versioned::get_version("SiteTree", $id, $version);
-		
+
 		if($record) {
 			if($record && !$record->canView()) return Security::permissionFailure($this);
 			$fields = $record->getCMSFields($this);
@@ -882,12 +882,12 @@ JS;
 
 			$fields->push(new HiddenField("ID"));
 			$fields->push(new HiddenField("Version"));
-			
+
 			$versionAuthor = DataObject::get_by_id('Member', $record->AuthorID);
 			if(!$versionAuthor) $versionAuthor = new ArrayData(array('Title' => 'Unknown author'));
 			$fields->insertBefore(
 				new LiteralField(
-					'YouAreViewingHeader', 
+					'YouAreViewingHeader',
 					'<p class="message notice">' .
 					sprintf(
 						_t(
@@ -896,7 +896,7 @@ JS;
 							PR_MEDIUM,
 							'Version number is a linked string, created is a relative time (e.g. 2 days ago), by a specific author'
 						),
-						"<a href=\"admin/getversion/$record->ID/$version\" title=\"" . ($versionAuthor ? $versionAuthor->Title : '') . "\">$version</a>", 
+						"<a href=\"admin/getversion/$record->ID/$version\" title=\"" . ($versionAuthor ? $versionAuthor->Title : '') . "\">$version</a>",
 						$record->obj('LastEdited')->Ago(),
 						($versionAuthor ? $versionAuthor->Title : '')
 					) .
@@ -909,10 +909,10 @@ JS;
 
 			// encode the message to appear in the body of the email
 			$archiveURL = Director::absoluteBaseURL() . $record->URLSegment . '?archiveDate=' . $record->obj('LastEdited')->URLDatetime();
-			
+
 			// Ensure that source file comments are disabled
 			SSViewer::set_source_file_comments(false);
-			
+
 			$archiveEmailMessage = urlencode( $this->customise( array( 'ArchiveDate' => $record->obj('LastEdited'), 'ArchiveURL' => $archiveURL ) )->renderWith( 'ViewArchivedEmail' ) );
 			$archiveEmailMessage = preg_replace( '/\+/', '%20', $archiveEmailMessage );
 
@@ -926,7 +926,7 @@ JS;
 				"ID" => $id,
 				"Version" => $version,
 			));
-			
+
 			// historical version shouldn't be editable
 			$readonlyFields = $form->Fields()->makeReadonly();
 			$form->setFields($readonlyFields);
@@ -936,7 +936,7 @@ JS;
 			));
 
 			SSViewer::setOption('rewriteHashlinks', false);
-			
+
 			if(Director::is_ajax()) {
 				$result = $templateData->renderWith($this->class . '_right');
 				$parts = split('</?form[^>]*>', $result);
@@ -966,14 +966,14 @@ JS;
 
 		$page = DataObject::get_by_id("SiteTree", $id);
 		if($page && !$page->canView()) return Security::permissionFailure($this);
-		
+
 		$record = $page->compareVersions($fromVersion, $toVersion);
-		
+
 		$fromVersionRecord = Versioned::get_version('SiteTree', $id, $fromVersion);
 		$toVersionRecord = Versioned::get_version('SiteTree', $id, $toVersion);
 		if(!$fromVersionRecord) user_error("Can't find version $fromVersion of page $id", E_USER_ERROR);
 		if(!$toVersionRecord) user_error("Can't find version $toVersion of page $id", E_USER_ERROR);
-		
+
 		if($record) {
 			$fromDateNice = $fromVersionRecord->obj('LastEdited')->Ago();
 			$toDateNice = $toVersionRecord->obj('LastEdited')->Ago();
@@ -988,14 +988,14 @@ JS;
 			$fields->insertBefore(
 				new LiteralField(
 					'YouAreComparingHeader',
-					'<p class="message notice">' . 
+					'<p class="message notice">' .
 					sprintf(
 						_t('CMSMain.COMPARINGV',"Comparing versions %s and %s"),
 						"<a href=\"admin/getversion/$id/$fromVersionRecord->Version\" title=\"$fromAuthor->Title\">$fromVersionRecord->Version</a> <small>($fromDateNice)</small>",
 						"<a href=\"admin/getversion/$id/$toVersionRecord->Version\" title=\"$toAuthor->Title\">$toVersionRecord->Version</a> <small>($toDateNice)</small>"
 					) .
 					'</p>'
-				), 
+				),
 				"Root"
 			);
 
@@ -1007,11 +1007,11 @@ JS;
 				"ID" => $id,
 				"Version" => $fromVersion,
 			));
-			
+
 			// comparison views shouldn't be editable
 			$readonlyFields = $form->Fields()->makeReadonly();
 			$form->setFields($readonlyFields);
-			
+
 			foreach($form->Fields()->dataFields() as $field) {
 				$field->dontEscape = true;
 			}
@@ -1071,14 +1071,14 @@ JS;
 			'DialogType' => 'alert'
 		))->renderWith('Dialog');
 	}
-	
+
 	/**
 	 * Batch Actions Handler
 	 */
 	function batchactions() {
 		return new CMSBatchActionHandler($this, 'batchactions');
 	}
-	
+
 	/**
 	 * @return Form
 	 */
@@ -1115,7 +1115,7 @@ JS;
 		$pageHtml = '';
 		foreach($forms as $urlSegment => $html) {
 			$pageHtml .= "<div class=\"params\" id=\"BatchActionParameters_$urlSegment\">$html</div>\n\n";
-		} 
+		}
 		return new LiteralField("BatchActionParameters", '<div id="BatchActionParameters" style="display:none">'.$pageHtml.'</div>');
 	}
 	/**
@@ -1124,7 +1124,7 @@ JS;
 	function BatchActionList() {
 		return $this->batchactions()->batchActionList();
 	}
-	
+
 	/**
 	 * @return Form
 	 */
@@ -1149,7 +1149,7 @@ JS;
 	function buildbrokenlinks($request) {
 		// Protect against CSRF on destructive action
 		if(!SecurityToken::inst()->checkRequest($request)) return $this->httpError(400);
-		
+
 		if($this->urlParams['ID']) {
 			$newPageSet[] = DataObject::get_by_id("Page", $this->urlParams['ID']);
 		} else {
@@ -1187,15 +1187,15 @@ JS;
 		foreach( $this->PageTypes() as $arrayData ) {
 			$pageTypes[$arrayData->getField('ClassName')] = $arrayData->getField('AddAction');
 		}
-		
+
 		$fields = new FieldSet(
 			new HiddenField("ParentID"),
 			new HiddenField("Locale", 'Locale', Translatable::get_current_locale()),
 			new DropdownField("PageType", "", $pageTypes, 'Page')
 		);
-		
+
 		$this->extend('updatePageOptions', $fields);
-		
+
 		$actions = new FieldSet(
 			new FormAction("addpage", _t('CMSMain.GO',"Go"))
 		);
@@ -1236,20 +1236,20 @@ JS;
 	function publishall($request) {
 		ini_set("memory_limit", -1);
 		ini_set('max_execution_time', 0);
-		
+
 		$response = "";
 
 		if(isset($this->requestParams['confirm'])) {
 			// Protect against CSRF on destructive action
 			if(!SecurityToken::inst()->checkRequest($request)) return $this->httpError(400);
-			
+
 			$start = 0;
 			$pages = DataObject::get("SiteTree", "", "", "", "$start,30");
 			$count = 0;
 			while($pages) {
 				foreach($pages as $page) {
 					if($page && !$page->canPublish()) return Security::permissionFailure($this);
-					
+
 					$page->doPublish();
 					$page->destroy();
 					unset($page);
@@ -1281,10 +1281,10 @@ JS;
 					. $tokenHtml .
 				'</form>';
 		}
-		
+
 		return $response;
 	}
-	
+
 	/**
 	 * Restore a completely deleted page from the SiteTree_versions table.
 	 */
@@ -1311,7 +1311,7 @@ JS;
 	function duplicate($request) {
 		// Protect against CSRF on destructive action
 		if(!SecurityToken::inst()->checkRequest($request)) return $this->httpError(400);
-		
+
 		if(($id = $this->urlParams['ID']) && is_numeric($id)) {
 			$page = DataObject::get_by_id("SiteTree", $id);
 			if($page && (!$page->canEdit() || !$page->canCreate())) {
@@ -1319,8 +1319,8 @@ JS;
 			}
 
 			$newPage = $page->duplicate();
-			
-			// ParentID can be hard-set in the URL.  This is useful for pages with multiple parents
+
+			// ParentID can be hard-set in the URL.	 This is useful for pages with multiple parents
 			if($_GET['parentID'] && is_numeric($_GET['parentID'])) {
 				$newPage->ParentID = $_GET['parentID'];
 				$newPage->write();
@@ -1335,7 +1335,7 @@ JS;
 	function duplicatewithchildren($request) {
 		// Protect against CSRF on destructive action
 		if(!SecurityToken::inst()->checkRequest($request)) return $this->httpError(400);
-		
+
 		if(($id = $this->urlParams['ID']) && is_numeric($id)) {
 			$page = DataObject::get_by_id("SiteTree", $id);
 			if($page && (!$page->canEdit() || !$page->canCreate())) {
@@ -1349,24 +1349,24 @@ JS;
 			user_error("CMSMain::duplicate() Bad ID: '$id'", E_USER_WARNING);
 		}
 	}
-	
 
-	
+
+
 	/**
 	 * Create a new translation from an existing item, switch to this language and reload the tree.
 	 */
 	function createtranslation($request) {
 		// Protect against CSRF on destructive action
 		if(!SecurityToken::inst()->checkRequest($request)) return $this->httpError(400);
-		
+
 		$langCode = Convert::raw2sql($_REQUEST['newlang']);
 		$originalLangID = (int)$_REQUEST['ID'];
 
 		$record = $this->getRecord($originalLangID);
-		
+
 		$this->Locale = $langCode;
 		Translatable::set_current_locale($langCode);
-		
+
 		// Create a new record in the database - this is different
 		// to the usual "create page" pattern of storing the record
 		// in-memory until a "save" is performed by the user, mainly
@@ -1375,7 +1375,7 @@ JS;
 		$translatedRecord = $record->createTranslation($langCode);
 
 		$url = sprintf(
-			"%s/%d/?locale=%s", 
+			"%s/%d/?locale=%s",
 			$this->Link('show'),
 			$translatedRecord->ID,
 			$langCode
@@ -1395,7 +1395,7 @@ JS;
 			$title = _t("{$class}.MENUTITLE", LeftAndMain::menu_title_for_class($class));
 			$perms["CMS_ACCESS_" . $class] = array(
 				'name' => sprintf(_t(
-					'CMSMain.ACCESS', 
+					'CMSMain.ACCESS',
 					"Access to '%s' section",
 					PR_MEDIUM,
 					"Item in permission selection identifying the admin section. Example: Access to 'Files & Images'"
@@ -1422,18 +1422,18 @@ JS;
 
 		return $perms;
 	}
-	
+
 	/**
      * Returns all languages with languages already used appearing first.
      * Called by the SSViewer when rendering the template.
      */
     function LangSelector() {
-		$member = Member::currentUser(); 
+		$member = Member::currentUser();
 		$dropdown = new LanguageDropdownField(
-			'LangSelector', 
-			'Language', 
+			'LangSelector',
+			'Language',
 			array(),
-			'SiteTree', 
+			'SiteTree',
 			'Locale-English',
 			singleton('SiteTree')
 		);
@@ -1443,7 +1443,7 @@ JS;
 
 	/**
 	 * Determine if there are more than one languages in our site tree.
-	 * 
+	 *
 	 * @return boolean
 	 */
 	function MultipleLanguages() {
@@ -1451,7 +1451,7 @@ JS;
 
 		return (count($langs) > 1);
 	}
-	
+
 	/**
 	 * @return boolean
 	 */
@@ -1465,54 +1465,54 @@ JS;
  * @subpackage content
  */
 class CMSMainMarkingFilter {
-	
+
 	function __construct() {
 		$this->ids = array();
 		$this->expanded = array();
-		
+
 		$where = array();
-		
+
 		// Match against URLSegment, Title, MenuTitle & Content
 		if (isset($_REQUEST['SiteTreeSearchTerm'])) {
 			$term = Convert::raw2sql($_REQUEST['SiteTreeSearchTerm']);
 			$where[] = "\"URLSegment\" LIKE '%$term%' OR \"Title\" LIKE '%$term%' OR \"MenuTitle\" LIKE '%$term%' OR \"Content\" LIKE '%$term%'";
 		}
-		
+
 		// Match against date
 		if (isset($_REQUEST['SiteTreeFilterDate'])) {
 			$date = $_REQUEST['SiteTreeFilterDate'];
 			$date = ((int)substr($date,6,4)) . '-' . ((int)substr($date,3,2)) . '-' . ((int)substr($date,0,2));
-			$where[] = "\"LastEdited\" > '$date'"; 
+			$where[] = "\"LastEdited\" > '$date'";
 		}
-		
+
 		// Match against exact ClassName
 		if (isset($_REQUEST['ClassName']) && $_REQUEST['ClassName'] != 'All') {
 			$klass = Convert::raw2sql($_REQUEST['ClassName']);
 			$where[] = "\"ClassName\" = '$klass'";
 		}
-		
-		// Partial string match against a variety of fields 
+
+		// Partial string match against a variety of fields
 		foreach (CMSMain::T_SiteTreeFilterOptions() as $key => $value) {
 			if (!empty($_REQUEST[$key])) {
 				$match = Convert::raw2sql($_REQUEST[$key]);
 				$where[] = "\"$key\" LIKE '%$match%'";
 			}
 		}
-		
+
 		$where = empty($where) ? '' : 'WHERE (' . implode(') AND (',$where) . ')';
-		
+
 		$parents = array();
-		
+
 		/* Do the actual search */
 		$res = DB::query('SELECT "ParentID", "ID" FROM "SiteTree" '.$where);
 		if (!$res) return;
-		
+
 		/* And keep a record of parents we don't need to get parents of themselves, as well as IDs to mark */
 		foreach($res as $row) {
 			if ($row['ParentID']) $parents[$row['ParentID']] = true;
 			$this->ids[$row['ID']] = true;
 		}
-		
+
 		/* We need to recurse up the tree, finding ParentIDs for each ID until we run out of parents */
 		while (!empty($parents)) {
 			$res = DB::query('SELECT "ParentID", "ID" FROM "SiteTree" WHERE "ID" in ('.implode(',',array_keys($parents)).')');
@@ -1525,7 +1525,7 @@ class CMSMainMarkingFilter {
 			}
 		}
 	}
-	
+
 	function mark($node) {
 		$id = $node->ID;
 		if(array_key_exists((int) $id, $this->expanded)) $node->markOpened();
