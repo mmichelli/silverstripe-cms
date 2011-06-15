@@ -88,7 +88,7 @@ class CMSMain extends LeftAndMain implements CurrentPageIdentifier, PermissionPr
 		} elseif($this->getRequest()->requestVar("locale")) {
 			$this->Locale = $this->getRequest()->requestVar("locale");
 		} else {
-			$this->Locale = Translatable::choose_site_local();
+			$this->Locale = Translatable::choose_site_locale();
 		}
 
 
